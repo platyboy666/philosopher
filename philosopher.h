@@ -6,7 +6,7 @@
 /*   By: pkorsako <pkorsako@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/04 15:03:48 by pkorsako          #+#    #+#             */
-/*   Updated: 2023/02/09 15:05:04 by pkorsako         ###   ########.fr       */
+/*   Updated: 2023/02/09 16:07:58 by pkorsako         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ typedef struct s_args
 typedef struct s_philo
 {
 	int				ready;
-	t_args			*args;
+	t_args			args;
 	pthread_t		*philosophers;
 	int				*fork;
 	pthread_mutex_t	*fork_mutex;

@@ -6,7 +6,7 @@
 /*   By: pkorsako <pkorsako@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/04 15:03:42 by pkorsako          #+#    #+#             */
-/*   Updated: 2023/02/09 15:10:29 by pkorsako         ###   ########.fr       */
+/*   Updated: 2023/02/09 17:01:21 by pkorsako         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,11 +31,12 @@ int	eat(t_philo *philo, int philo_id)
 	{*/
 //		if (philo.fork[philo_id] && philo.fork[philo_id + 1])
 //		{
+			printf("philo %d is eating\n", philo_id);
 			pthread_mutex_lock(&philo->fork_mutex[philo_id - 1]);
 			pthread_mutex_lock(&philo->fork_mutex[philo_id]);
 			philo->fork[philo_id - 1] = USED;
 			philo->fork[philo_id] = USED;
-			usleep(philo->args->time_to_eat);
+			usleep(philo->args.time_to_eat);
 			philo->fork[philo_id - 1] = FREE;
 			philo->fork[philo_id] = FREE;
 			pthread_mutex_unlock(&philo->fork_mutex[philo_id - 1]);
@@ -55,21 +56,27 @@ int	can_eat(t_philo *philo, int philo_id)
 
 int	sleeping(t_philo *philo, int philo_id)
 {
-	printf("philo %d is sleeping", philo_id);
-	usleep(philo->args->time_to_sleep);
+	printf("philo %d is sleeping\n", philo_id);
+	usleep(philo->args.time_to_sleep);
 	return(1);
 }
 
 int	think(t_philo *philo, int philo_id)
 {
-	printf("philo %d is thinking", philo_id);
+	printf("philo %d is thinking\n", philo_id);
 	return (1);
+}
+
+int	die(int philo_id)
+{
+	printf("philo %d just died\n", philo_id);
+	return(0);
 }
 
 void	*thread_routine(void *philosopher)
 {
 	t_philo	*philo = (t_philo *)philosopher;
-	int philo_id = philo->args->philo_nbr + 1;
+	int philo_id = philo->args.philo_nbr + 1;
 	int	vie;
 
 	
@@ -79,27 +86,30 @@ void	*thread_routine(void *philosopher)
 	while(vie == 1)
 	{
 		if (!can_eat(philo, philo_id))
-			sleeping(philo, philo_id);
+			usleep(philo->args.time_to_die);
+		if (!can_eat(philo, philo_id))
+			vie = die(philo_id);
 		think(philo, philo_id);
 		eat(philo, philo_id);
+		sleeping(philo, philo_id);
 	}
 	return (NULL);
 }
 
-t_args	save_args(char **argv, int argc)
+void	save_args(char **argv, int argc, t_philo *philo)
 {
-	t_args	args;
+	//t_args	args;
 	
 	if (argc >= 5 && argc <= 6)
 	{
-		args.philo_nbr = atoi(argv[0]);
-		args.time_to_die = atoi(argv[1]);
-		args.time_to_eat = atoi(argv[2]);
-		args.time_to_sleep = atoi(argv[3]);
+		philo->args.philo_nbr = atoi(argv[0]);
+		philo->args.time_to_die = atoi(argv[1]);
+		philo->args.time_to_eat = atoi(argv[2]);
+		philo->args.time_to_sleep = atoi(argv[3]);
 	}
 	if (argc == 6)
-		args.nbr_philo_must_eat = atoi(argv[4]);
-	return (args);
+		philo->args.nbr_philo_must_eat = atoi(argv[4]);
+//	return (args);
 }
 
 t_philo	*set_philo(t_philo *philo)
@@ -112,7 +122,7 @@ int main(int argc, char *argv[])
 {
 	t_philo		philo;
 
-	philo.args = save_args(&argv[1], argc);
+	save_args(&argv[1], argc, &philo);
 	int i = philo.args.philo_nbr;
 //	int i = 5;
 	printf("taille du tableau mutex :%d\t", i);
@@ -126,12 +136,12 @@ int main(int argc, char *argv[])
 		write(1, "malloc error\n", 14);
 		exit (1);
 	}
+	memset(philo.fork, FREE, philo.args.philo_nbr);
 	while(i-- > 0)
 	{
 		printf("i :%d\t", i);
 		pthread_mutex_init(&philo.fork_mutex[i], NULL);
 	}
-	memset(philo.fork, FREE, philo.args.philo_nbr);
 	philo.fork[philo.args.philo_nbr - 1] = -1;
 	while(philo.args.philo_nbr-- > 0)
 	{
@@ -141,6 +151,7 @@ int main(int argc, char *argv[])
 		while (philo.ready == 0)
 		{}
 	}
+	pthread_mutex_destroy(&philo.fork_mutex[0]);
 	free(philo.fork);
 	free(philo.philosophers);
 	free(philo.fork_mutex);
