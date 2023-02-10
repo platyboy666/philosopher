@@ -6,7 +6,7 @@
 /*   By: pkorsako <pkorsako@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/04 15:03:42 by pkorsako          #+#    #+#             */
-/*   Updated: 2023/02/09 17:01:21 by pkorsako         ###   ########.fr       */
+/*   Updated: 2023/02/10 15:09:30 by pkorsako         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,21 @@ int	die(int philo_id)
 	return(0);
 }
 
+void	ft_usleep(t_philo *philo, int philo_id)
+{
+	int time;
+	int try;
+
+	try = 0;
+	time = philo->args.time_to_die % 5;
+	while (!can_eat(philo, philo_id))
+	{
+		usleep(time);
+		if (try ++ == 5)
+			die(philo_id);
+	}
+}
+
 void	*thread_routine(void *philosopher)
 {
 	t_philo	*philo = (t_philo *)philosopher;
@@ -85,10 +100,10 @@ void	*thread_routine(void *philosopher)
 	philo->ready = 1;
 	while(vie == 1)
 	{
-		if (!can_eat(philo, philo_id))
-			usleep(philo->args.time_to_die);
-		if (!can_eat(philo, philo_id))
-			vie = die(philo_id);
+//		if (!can_eat(philo, philo_id))
+			ft_usleep(philo, philo_id);
+//		if (!can_eat(philo, philo_id))
+//			vie = die(philo_id);
 		think(philo, philo_id);
 		eat(philo, philo_id);
 		sleeping(philo, philo_id);
